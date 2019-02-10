@@ -16,33 +16,45 @@ namespace SearchTextField
     {
         public MGSearchTextField(IntPtr handle) : base(handle) { }
 
+        /// <summary>
         /// Maximum number of results to be shown in the suggestions list
-        public nint maxNumberOfResults = 0;
+        /// </summary>
+        public nint MaxNumberOfResults { get; set; } = 0;
 
+        /// <summary>
         /// Maximum height of the results list
-        public nint maxResultsListHeight = 0;
+        /// </summary>
+        public nint MaxResultsListHeight { get; set; } = 0;
 
+        /// <summary>
         /// Indicate if this field has been interacted with yet
-        public bool interactedWith = false;
+        /// </summary>
+        public bool InteractedWith { get; set; } = false;
 
+        /// <summary>
         /// Indicate if keyboard is showing or not
-        public bool keyboardIsShowing = false;
+        /// </summary>
+        public bool KeyboardIsShowing { get; set; } = false;
 
+        /// <summary>
         /// How long to wait before deciding typing has stopped
-        public double typingStoppedDelay = 0.8;
+        /// </summary>
+        public double TypingStoppedDelay { get; set; } = 0.8;
 
+        private SearchTextFieldTheme _theme = SearchTextFieldTheme.LightTheme();
+        /// <summary>
         /// Set your custom visual theme, or just choose between pre-defined SearchTextFieldTheme.lightTheme() and SearchTextFieldTheme.darkTheme() themes
-        SearchTextFieldTheme _theme = SearchTextFieldTheme.lightTheme();
-        public SearchTextFieldTheme theme
+        /// </summary>
+        public SearchTextFieldTheme Theme
         {
             get => _theme;
             set
             {
                 _theme = value;
 
-                tableView?.ReloadData();
+                _tableView?.ReloadData();
 
-                var placeholderColor = theme.placeholderColor;
+                var placeholderColor = Theme.PlaceholderColor;
                 if (placeholderColor != null)
                 {
                     var placeholderString = Placeholder;
@@ -51,43 +63,51 @@ namespace SearchTextField
                         this.AttributedPlaceholder = new NSAttributedString(str: placeholderString, attributes: new UIStringAttributes { ForegroundColor = placeholderColor });
                     }
 
-                    this.placeholderLabel.TextColor = placeholderColor;
+                    this._placeholderLabel.TextColor = placeholderColor;
                 }
 
-                var hightlightedFont = this.highlightAttributes.Font as UIFont;
+                var hightlightedFont = this.HighlightAttributes.Font as UIFont;
                 if (hightlightedFont != null)
                 {
-                    this.highlightAttributes.Font = hightlightedFont.WithSize(this.theme.font.PointSize);
+                    this.HighlightAttributes.Font = hightlightedFont.WithSize(this.Theme.Font.PointSize);
                 }
             }
         }
 
+        /// <summary>
         /// Show the suggestions list without filter when the text field is focused
-        public bool startVisible = false;
+        /// </summary>
+        public bool StartVisible { get; set; } = false;
 
+        private bool _startVisibleWithoutInteraction;
+        /// <summary>
         /// Show the suggestions list without filter even if the text field is not focused
-        bool _startVisibleWithoutInteraction = false;
-        public bool startVisibleWithoutInteraction
+        /// </summary>
+        public bool StartVisibleWithoutInteraction
         {
             get => _startVisibleWithoutInteraction;
             set
             {
                 _startVisibleWithoutInteraction = value;
-                if (startVisibleWithoutInteraction)
+                if (StartVisibleWithoutInteraction)
                 {
-                    textFieldDidChange();
+                    TextFieldDidChange();
                 }
             }
         }
 
+        /// <summary>
         /// Set an array of SearchTextFieldItem's to be used for suggestions
-        public void filterItems(List<SearchTextFieldItem> items)
+        /// </summary>
+        public void FilterItems(List<SearchTextFieldItem> items)
         {
-            filterDataSource = items;
+            FilterDataSource = items;
         }
 
+        /// <summary>
         /// Set an array of strings to be used for suggestions
-        public void filterStrings(List<string> strings)
+        /// </summary>
+        public void FilterStrings(List<string> strings)
         {
             var items = new List<SearchTextFieldItem>();
 
@@ -96,38 +116,52 @@ namespace SearchTextField
                 items.Add(new SearchTextFieldItem(title: value));
             }
 
-            filterItems(items);
+            FilterItems(items);
         }
 
+        /// <summary>
         /// Closure to handle when the user pick an item
-        public SearchTextFieldItemHandler itemSelectionHandler;
+        /// </summary>
+        public SearchTextFieldItemHandler ItemSelectionHandler { get; set; }
 
+        /// <summary>
         /// Closure to handle when the user stops typing
-        public Action userStoppedTypingHandler;
+        /// </summary>
+        public Action UserStoppedTypingHandler { get; set; }
 
+        /// <summary>
         /// Set your custom set of attributes in order to highlight the string found in each item
-        public UIStringAttributes highlightAttributes { get; } = new UIStringAttributes { Font = UIFont.BoldSystemFontOfSize(14) };
+        /// </summary>
+        public UIStringAttributes HighlightAttributes { get; } = new UIStringAttributes { Font = UIFont.BoldSystemFontOfSize(14) };
 
+        /// <summary>
         /// Start showing the default loading indicator, useful for searches that take some time.
-        public void showLoadingIndicator()
+        /// </summary>
+        public void ShowLoadingIndicator()
         {
-            this.RightViewMode = UITextFieldViewMode.Always;
-            indicator.StartAnimating();
+            RightViewMode = UITextFieldViewMode.Always;
+            _indicator.StartAnimating();
         }
 
+        /// <summary>
         /// Force the results list to adapt to RTL languages
-        public bool forceRightToLeft = false;
+        /// </summary>
+        public bool ForceRightToLeft { get; set; } = false;
 
+        /// <summary>
         /// Hide the default loading indicator
-        public void stopLoadingIndicator()
+        /// </summary>
+        public void StopLoadingIndicator()
         {
-            this.RightViewMode = UITextFieldViewMode.Never;
-            indicator.StopAnimating();
+            RightViewMode = UITextFieldViewMode.Never;
+            _indicator.StopAnimating();
         }
 
+        private bool _inlineMode;
+        /// <summary>
         /// When InlineMode is true, the suggestions appear in the same line than the entered string. It's useful for email domains suggestion for example.
-        private bool _inlineMode = false;
-        public bool inlineMode
+        /// </summary>
+        public bool InlineMode
         {
             get => _inlineMode;
             set
@@ -141,80 +175,92 @@ namespace SearchTextField
             }
         }
 
+        /// <summary>
         /// Only valid when InlineMode is true. The suggestions appear after typing the provided string (or even better a character like '@')
-        public String startFilteringAfter;
+        /// </summary>
+        public string StartFilteringAfter { get; set; }
 
+        /// <summary>
         /// Min number of characters to start filtering
-        public nint minCharactersNumberToStartFiltering;
+        /// </summary>
+        public nint MinCharactersNumberToStartFiltering { get; set; }
 
+        /// <summary>
         /// Force no filtering (display the entire filtered data source)
-        public bool forceNoFiltering = false;
+        /// </summary>
+        public bool ForceNoFiltering { get; set; } = false;
 
+        /// <summary>
         /// If startFilteringAfter is set, and startSuggestingInmediately is true, the list of suggestions appear inmediately
-        public bool startSuggestingInmediately = false;
+        /// </summary>
+        public bool StartSuggestingInmediately { get; set; } = false;
 
+        /// <summary>
         /// Allow to decide the comparision options
-        public StringComparison comparisonOptions = StringComparison.InvariantCultureIgnoreCase;
+        /// </summary>
+        public StringComparison ComparisonOptions { get; set; } = StringComparison.InvariantCultureIgnoreCase;
 
+        /// <summary>
         /// Set the results list's header
-        public UIView resultsListHeader;
+        /// </summary>
+        public UIView ResultsListHeader { get; set; }
 
         // Move the table around to customize for your layout
-        public nfloat tableXOffset = 0.0f;
-        public nfloat tableYOffset = 0.0f;
-        public nfloat tableCornerRadius = 2.0f;
-        public nfloat tableBottomMargin = 10.0f;
+        public nfloat TableXOffset { get; set; } = 0.0f;
+        public nfloat TableYOffset { get; set; } = 0.0f;
+        public nfloat TableCornerRadius { get; set; } = 2.0f;
+        public nfloat TableBottomMargin { get; set; } = 10.0f;
 
         ////////////////////////////////////////////////////////////////////////
         // Private implementation
 
-        private UITableView tableView;
-        private UIView shadowView;
-        private Direction direction = Direction.down;
-        private nfloat fontConversionRate = 0.7f;
-        private CGRect? keyboardFrame;
-        private NSTimer timer;
-        private UILabel placeholderLabel;
-        private static string cellIdentifier = "APSearchTextFieldCell";
-        private UIActivityIndicatorView indicator = new UIActivityIndicatorView(style: UIActivityIndicatorViewStyle.Gray);
-        private nfloat maxTableViewSize = 0f;
+        private UITableView _tableView;
+        private UIView _shadowView;
+        private Direction _direction = Direction.Down;
+        private nfloat _fontConversionRate = 0.7f;
+        private CGRect? _keyboardFrame;
+        private NSTimer _timer;
+        private UILabel _placeholderLabel;
+        private const string CellIdentifier = "APSearchTextFieldCell";
+        private UIActivityIndicatorView _indicator = new UIActivityIndicatorView(style: UIActivityIndicatorViewStyle.Gray);
+        private nfloat _maxTableViewSize = 0f;
 
-        private List<SearchTextFieldItem> filteredResults = new List<SearchTextFieldItem>();
+        private List<SearchTextFieldItem> _filteredResults = new List<SearchTextFieldItem>();
 
         private List<SearchTextFieldItem> _filterDataSource = new List<SearchTextFieldItem>();
-        private List<SearchTextFieldItem> filterDataSource
+        private List<SearchTextFieldItem> FilterDataSource
         {
             get => _filterDataSource;
             set
             {
                 _filterDataSource = value;
 
-                filter(forceShowAll: forceNoFiltering);
-                buildSearchTableView();
+                Filter(forceShowAll: ForceNoFiltering);
+                BuildSearchTableView();
 
-                if (startVisibleWithoutInteraction)
+                if (StartVisibleWithoutInteraction)
                 {
-                    textFieldDidChange();
+                    TextFieldDidChange();
                 }
             }
         }
 
-        private string currentInlineItem = "";
+        //private readonly string currentInlineItem = "";
 
         public override void WillMoveToWindow(UIWindow window)
         {
             base.WillMoveToWindow(window);
-            tableView?.RemoveFromSuperview();
+            _tableView?.RemoveFromSuperview();
         }
 
         public override void WillMoveToSuperview(UIView newsuper)
         {
             base.WillMoveToSuperview(newsuper);
 
-            this.EditingChanged += (sender, e) => textFieldDidChange();
-            this.EditingDidBegin += (sender, e) => textFieldDidBeginEditing();
-            this.EditingDidEnd += (sender, e) => textFieldDidEndEditing();
-            this.EditingDidEndOnExit += (sender, e) => textFieldDidEndEditingOnExit();
+            EditingChanged += (sender, e) => TextFieldDidChange();
+            EditingDidBegin += (sender, e) => TextFieldDidBeginEditing();
+            EditingDidEnd += (sender, e) => TextFieldDidEndEditing();
+            EditingDidEndOnExit += (sender, e) => TextFieldDidEndEditingOnExit();
 
             UIKeyboard.Notifications.ObserveWillShow(KeyboardWillShow);
             UIKeyboard.Notifications.ObserveWillHide(KeyboardWillHide);
@@ -225,18 +271,18 @@ namespace SearchTextField
         {
             base.LayoutSubviews();
 
-            if (inlineMode)
+            if (InlineMode)
             {
-                buildPlaceholderLabel();
+                BuildPlaceholderLabel();
             }
             else
             {
-                buildSearchTableView();
+                BuildSearchTableView();
             }
 
             // Create the loading indicator
-            indicator.HidesWhenStopped = true;
-            this.RightView = indicator;
+            _indicator.HidesWhenStopped = true;
+            RightView = _indicator;
         }
 
         public override CGRect RightViewRect(CGRect forBounds)
@@ -247,38 +293,39 @@ namespace SearchTextField
         }
 
         // Create the filter table and shadow view
-        private void buildSearchTableView()
+        private void BuildSearchTableView()
         {
-            if (tableView != null && shadowView != null)
+            if (_tableView != null && _shadowView != null)
             {
-                tableView.Layer.MasksToBounds = true;
-                tableView.Layer.BorderWidth = theme.borderWidth > 0 ? theme.borderWidth : 0.5f;
-                tableView.WeakDataSource = this;
-                tableView.WeakDelegate = this;
-                tableView.SeparatorInset = UIEdgeInsets.Zero;
-                tableView.TableHeaderView = resultsListHeader;
-                if (forceRightToLeft)
+                _tableView.Layer.MasksToBounds = true;
+                _tableView.Layer.BorderWidth = Theme.BorderWidth > 0 ? Theme.BorderWidth : 0.5f;
+                _tableView.WeakDataSource = this;
+                _tableView.WeakDelegate = this;
+                _tableView.SeparatorInset = UIEdgeInsets.Zero;
+                _tableView.TableHeaderView = ResultsListHeader;
+
+                if (ForceRightToLeft)
                 {
-                    tableView.SemanticContentAttribute = UISemanticContentAttribute.ForceRightToLeft;
+                    _tableView.SemanticContentAttribute = UISemanticContentAttribute.ForceRightToLeft;
                 }
 
-                shadowView.BackgroundColor = UIColor.LightTextColor;
-                shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
-                shadowView.Layer.ShadowOffset = CGSize.Empty;
-                shadowView.Layer.ShadowOpacity = 1;
+                _shadowView.BackgroundColor = UIColor.LightTextColor;
+                _shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
+                _shadowView.Layer.ShadowOffset = CGSize.Empty;
+                _shadowView.Layer.ShadowOpacity = 1;
 
-                this.Window?.AddSubview(tableView);
+                Window?.AddSubview(_tableView);
             }
             else
             {
-                tableView = new UITableView(frame: CGRect.Empty);
-                shadowView = new UIView(frame: CGRect.Empty);
+                _tableView = new UITableView(frame: CGRect.Empty);
+                _shadowView = new UIView(frame: CGRect.Empty);
             }
 
-            redrawSearchTableView();
+            RedrawSearchTableView();
         }
 
-        private void buildPlaceholderLabel()
+        private void BuildPlaceholderLabel()
         {
             var newRect = this.PlaceholderRect(forBounds: this.Bounds);
             var caretRect = this.GetCaretRectForPosition(this.BeginningOfDocument);
@@ -293,41 +340,43 @@ namespace SearchTextField
             newRect.X = caretRect.X + caretRect.Size.Width + textRect.X;
             newRect.Width = newRect.Width - newRect.X;
 
-            if (placeholderLabel != null)
+            if (_placeholderLabel != null)
             {
-                placeholderLabel.Font = this.Font;
-                placeholderLabel.Frame = newRect;
+                _placeholderLabel.Font = this.Font;
+                _placeholderLabel.Frame = newRect;
             }
             else
             {
-                placeholderLabel = new UILabel(frame: newRect);
-                placeholderLabel.Font = this.Font;
-                placeholderLabel.BackgroundColor = UIColor.Clear;
-                placeholderLabel.LineBreakMode = UILineBreakMode.Clip;
+                _placeholderLabel = new UILabel(frame: newRect)
+                {
+                    Font = this.Font,
+                    BackgroundColor = UIColor.Clear,
+                    LineBreakMode = UILineBreakMode.Clip
+                };
 
                 var placeholderColor = this.AttributedPlaceholder?.GetAttribute(UIStringAttributeKey.ForegroundColor, 0, out NSRange effectiveRange) as UIColor;
                 if (placeholderColor != null)
                 {
-                    placeholderLabel.TextColor = placeholderColor;
+                    _placeholderLabel.TextColor = placeholderColor;
                 }
                 else
                 {
-                    placeholderLabel.TextColor = UIColor.FromRGBA(red: 0.8f, green: 0.8f, blue: 0.8f, alpha: 1.0f);
+                    _placeholderLabel.TextColor = UIColor.FromRGBA(red: 0.8f, green: 0.8f, blue: 0.8f, alpha: 1.0f);
                 }
 
-                this.AddSubview(placeholderLabel);
+                this.AddSubview(_placeholderLabel);
             }
         }
 
-        private void redrawSearchTableView()
+        private void RedrawSearchTableView()
         {
-            if (inlineMode)
+            if (InlineMode)
             {
-                tableView.Hidden = true;
+                _tableView.Hidden = true;
                 return;
             }
 
-            if (tableView != null)
+            if (_tableView != null)
             {
                 var frameNullable = this.Superview?.ConvertRectToView(this.Frame, null);
                 if (!frameNullable.HasValue)
@@ -341,92 +390,92 @@ namespace SearchTextField
                 //  incorrect contentSize when we have specified non-standard fonts and/or
                 //  cellHeights in the theme. We do it here to ensure updates to these settings
                 //  are recognized if changed after the tableView is created
-                tableView.EstimatedRowHeight = theme.cellHeight;
+                _tableView.EstimatedRowHeight = Theme.CellHeight;
 
-                if (this.direction == Direction.down)
+                if (this._direction == Direction.Down)
                 {
                     nfloat tableHeight = 0f;
 
-                    var keyboardHeight = keyboardFrame?.Height;
-                    if (keyboardIsShowing && keyboardHeight != null)
+                    var keyboardHeight = _keyboardFrame?.Height;
+                    if (KeyboardIsShowing && keyboardHeight != null)
                     {
-                        tableHeight = (nfloat)Math.Min(tableView.ContentSize.Height, UIScreen.MainScreen.Bounds.Height - frame.Y - frame.Height - (nfloat)keyboardHeight);
+                        tableHeight = (nfloat)Math.Min(_tableView.ContentSize.Height, UIScreen.MainScreen.Bounds.Height - frame.Y - frame.Height - (nfloat)keyboardHeight);
                     }
                     else
                     {
-                        tableHeight = (nfloat)Math.Min(tableView.ContentSize.Height, UIScreen.MainScreen.Bounds.Height - frame.Y - frame.Height);
+                        tableHeight = (nfloat)Math.Min(_tableView.ContentSize.Height, UIScreen.MainScreen.Bounds.Height - frame.Y - frame.Height);
                     }
 
-                    if (maxResultsListHeight > 0)
+                    if (MaxResultsListHeight > 0)
                     {
-                        tableHeight = (nfloat)Math.Min(tableHeight, maxResultsListHeight);
+                        tableHeight = (nfloat)Math.Min(tableHeight, MaxResultsListHeight);
                     }
 
                     // Set a bottom margin of 10p
-                    if (tableHeight < tableView.ContentSize.Height)
+                    if (tableHeight < _tableView.ContentSize.Height)
                     {
-                        tableHeight -= tableBottomMargin;
+                        tableHeight -= TableBottomMargin;
                     }
 
                     var tableViewFrame = new CGRect(x: 0, y: 0, width: frame.Width - 4, height: tableHeight);
                     var origin = this.ConvertRectToView(tableViewFrame, null);
-                    tableViewFrame.X = origin.X + 2 + tableXOffset;
-                    tableViewFrame.Y = origin.Y + frame.Height + 2 + tableYOffset;
+                    tableViewFrame.X = origin.X + 2 + TableXOffset;
+                    tableViewFrame.Y = origin.Y + frame.Height + 2 + TableYOffset;
                     UIView.Animate(0.2, () => {
-                        tableView.Frame = tableViewFrame;
+                        _tableView.Frame = tableViewFrame;
                     });
 
                     var shadowFrame = new CGRect(x: 0, y: 0, width: frame.Width - 6, height: 1);
                     origin = this.ConvertRectToView(shadowFrame, null);
                     shadowFrame.X = origin.X + 3;
-                    shadowFrame.Y = tableView.Frame.Y;
-                    shadowView.Frame = shadowFrame;
+                    shadowFrame.Y = _tableView.Frame.Y;
+                    _shadowView.Frame = shadowFrame;
                 }
                 else
                 {
-                    var tableHeight = (nfloat)Math.Min((tableView.ContentSize.Height), (UIScreen.MainScreen.Bounds.Height - frame.Y - theme.cellHeight));
+                    var tableHeight = (nfloat)Math.Min((_tableView.ContentSize.Height), (UIScreen.MainScreen.Bounds.Height - frame.Y - Theme.CellHeight));
                     UIView.Animate(0.2, () =>
                     {
-                        this.tableView.Frame = new CGRect(x: frame.X + 2, y: (frame.Y - tableHeight), width: frame.Width - 4, height: tableHeight);
-                        this.shadowView.Frame = new CGRect(x: frame.X + 3, y: (frame.Y + 3), width: frame.Width - 6, height: 1);
+                        this._tableView.Frame = new CGRect(x: frame.X + 2, y: (frame.Y - tableHeight), width: frame.Width - 4, height: tableHeight);
+                        this._shadowView.Frame = new CGRect(x: frame.X + 3, y: (frame.Y + 3), width: frame.Width - 6, height: 1);
                     });
                 }
 
-                Superview?.BringSubviewToFront(tableView);
-                Superview?.BringSubviewToFront(shadowView);
+                Superview?.BringSubviewToFront(_tableView);
+                Superview?.BringSubviewToFront(_shadowView);
 
                 if (this.IsFirstResponder)
                 {
                     Superview?.BringSubviewToFront(this);
                 }
 
-                tableView.Layer.BorderColor = theme.borderColor.CGColor;
-                tableView.Layer.CornerRadius = tableCornerRadius;
-                tableView.SeparatorColor = theme.separatorColor;
-                tableView.BackgroundColor = theme.bgColor;
+                _tableView.Layer.BorderColor = Theme.BorderColor.CGColor;
+                _tableView.Layer.CornerRadius = TableCornerRadius;
+                _tableView.SeparatorColor = Theme.SeparatorColor;
+                _tableView.BackgroundColor = Theme.BackgroundColor;
 
-                tableView.ReloadData();
+                _tableView.ReloadData();
             }
         }
 
         private void KeyboardWillShow(object sender, UIKeyboardEventArgs e)
         {
-            if (!keyboardIsShowing && IsEditing)
+            if (!KeyboardIsShowing && IsEditing)
             {
-                keyboardIsShowing = true;
-                keyboardFrame = e.FrameEnd;
-                interactedWith = true;
-                prepareDrawTableResult();
+                KeyboardIsShowing = true;
+                _keyboardFrame = e.FrameEnd;
+                InteractedWith = true;
+                PrepareDrawTableResult();
             }
         }
 
         private void KeyboardWillHide(object sender, UIKeyboardEventArgs e)
         {
-            if (keyboardIsShowing)
+            if (KeyboardIsShowing)
             {
-                keyboardIsShowing = false;
-                direction = Direction.down;
-                redrawSearchTableView();
+                KeyboardIsShowing = false;
+                _direction = Direction.Down;
+                RedrawSearchTableView();
             }
         }
 
@@ -436,243 +485,242 @@ namespace SearchTextField
 
             Task.Delay(100).ContinueWith(t => InvokeOnMainThread(() =>
             {
-                keyboardFrame = frameEnd;
-                prepareDrawTableResult();
+                _keyboardFrame = frameEnd;
+                PrepareDrawTableResult();
             }));
         }
 
-        public void typingDidStop()
+        public void TypingDidStop()
         {
-            this.userStoppedTypingHandler?.Invoke();
+            this.UserStoppedTypingHandler?.Invoke();
         }
 
         // Handle text field changes
-        public void textFieldDidChange()
+        public void TextFieldDidChange()
         {
-            if (!inlineMode && tableView == null)
+            if (!InlineMode && _tableView == null)
             {
-                buildSearchTableView();
+                BuildSearchTableView();
             }
 
-            interactedWith = true;
+            InteractedWith = true;
 
             // Detect pauses while typing
-            timer?.Invalidate();
-            //Timer.scheduledTimer(timeInterval: typingStoppedDelay, target: self, selector: #selector(SearchTextField.typingDidStop), userInfo: self, repeats: false)
-            timer = NSTimer.CreateScheduledTimer(interval: typingStoppedDelay, repeats: false, block: t => typingDidStop());
+            _timer?.Invalidate();
+            _timer = NSTimer.CreateScheduledTimer(interval: TypingStoppedDelay, repeats: false, block: t => TypingDidStop());
 
             if (string.IsNullOrWhiteSpace(Text))
             {
-                clearResults();
-                tableView?.ReloadData();
-                if (startVisible || startVisibleWithoutInteraction)
+                ClearResults();
+                _tableView?.ReloadData();
+                if (StartVisible || StartVisibleWithoutInteraction)
                 {
-                    filter(forceShowAll: true);
+                    Filter(forceShowAll: true);
                 }
-                if (placeholderLabel != null)
+                if (_placeholderLabel != null)
                 {
-                    placeholderLabel.Text = "";
+                    _placeholderLabel.Text = "";
                 }
             }
             else
             {
-                filter(forceShowAll: forceNoFiltering);
-                prepareDrawTableResult();
+                Filter(forceShowAll: ForceNoFiltering);
+                PrepareDrawTableResult();
             }
 
-            buildPlaceholderLabel();
+            BuildPlaceholderLabel();
         }
 
-        public void textFieldDidBeginEditing()
+        public void TextFieldDidBeginEditing()
         {
-            if ((startVisible || startVisibleWithoutInteraction) && string.IsNullOrWhiteSpace(Text))
+            if ((StartVisible || StartVisibleWithoutInteraction) && string.IsNullOrWhiteSpace(Text))
             {
-                clearResults();
-                filter(forceShowAll: true);
+                ClearResults();
+                Filter(forceShowAll: true);
             }
-            if (placeholderLabel != null)
+            if (_placeholderLabel != null)
             {
-                placeholderLabel.AttributedText = null;
-            }
-        }
-
-        public void textFieldDidEndEditing()
-        {
-            clearResults();
-            tableView?.ReloadData();
-            if (placeholderLabel != null)
-            {
-                placeholderLabel.AttributedText = null;
+                _placeholderLabel.AttributedText = null;
             }
         }
 
-        public void textFieldDidEndEditingOnExit()
+        public void TextFieldDidEndEditing()
         {
-            var firstElement = filteredResults.FirstOrDefault();
+            ClearResults();
+            _tableView?.ReloadData();
+            if (_placeholderLabel != null)
+            {
+                _placeholderLabel.AttributedText = null;
+            }
+        }
+
+        public void TextFieldDidEndEditingOnExit()
+        {
+            var firstElement = _filteredResults.FirstOrDefault();
             if (firstElement != null)
             {
-                if (itemSelectionHandler != null)
+                if (ItemSelectionHandler != null)
                 {
-                    itemSelectionHandler(filteredResults, 0);
+                    ItemSelectionHandler(_filteredResults, 0);
                 }
                 else
                 {
-                    if (inlineMode && string.IsNullOrEmpty(startFilteringAfter))
+                    if (InlineMode && string.IsNullOrEmpty(StartFilteringAfter))
                     {
-                        var stringElements = this.Text?.Split(startFilteringAfter);
-                        Text = stringElements.FirstOrDefault() + startFilteringAfter + firstElement.title;
+                        var stringElements = this.Text?.Split(StartFilteringAfter);
+                        Text = stringElements.FirstOrDefault() + StartFilteringAfter + firstElement.Title;
                     }
                     else
                     {
-                        Text = firstElement.title;
+                        Text = firstElement.Title;
                     }
                 }
             }
         }
 
-        public void hideResultsList()
+        public void HideResultsList()
         {
-            var tableFrame = tableView?.Frame;
+            var tableFrame = _tableView?.Frame;
             if (tableFrame.HasValue)
             {
                 var newFrame = new CGRect(x: tableFrame.Value.X, y: tableFrame.Value.Y, width: tableFrame.Value.Width, height: 0.0f);
                 UIView.Animate(0.2, () =>
                 {
-                    tableView.Frame = newFrame;
+                    _tableView.Frame = newFrame;
                 });
             }
         }
 
-        private void filter(bool forceShowAll)
+        private void Filter(bool forceShowAll)
         {
-            clearResults();
+            ClearResults();
 
-            if (Text.Length < minCharactersNumberToStartFiltering)
+            if (Text.Length < MinCharactersNumberToStartFiltering)
             {
                 return;
             }
 
-            for (int i = 0; i < filterDataSource.Count; i++)
+            for (int i = 0; i < FilterDataSource.Count; i++)
             {
-                var item = filterDataSource[i];
+                var item = FilterDataSource[i];
 
-                if (!inlineMode)
+                if (!InlineMode)
                 {
                     // Find text in title and subtitle
-                    var titleFilterStart = item.title.IndexOf(Text, comparisonOptions);
-                    var subtitleFilterStart = !string.IsNullOrEmpty(item?.subtitle) ? item.subtitle.IndexOf(Text, comparisonOptions) : -1;
+                    var titleFilterStart = item.Title.IndexOf(Text, ComparisonOptions);
+                    var subtitleFilterStart = !string.IsNullOrEmpty(item?.Subtitle) ? item.Subtitle.IndexOf(Text, ComparisonOptions) : -1;
 
                     if (titleFilterStart >= 0 || subtitleFilterStart >= 0 || forceShowAll)
                     {
-                        item.attributedTitle = new NSMutableAttributedString(item.title);
-                        item.attributedSubtitle = new NSMutableAttributedString(!string.IsNullOrEmpty(item.subtitle) ? item.subtitle : "");
+                        item.AttributedTitle = new NSMutableAttributedString(item.Title);
+                        item.AttributedSubtitle = new NSMutableAttributedString(!string.IsNullOrEmpty(item.Subtitle) ? item.Subtitle : "");
 
-                        item.attributedTitle.SetAttributes(highlightAttributes, new NSRange(titleFilterStart, Text.Length));
+                        item.AttributedTitle.SetAttributes(HighlightAttributes, new NSRange(titleFilterStart, Text.Length));
 
                         if (subtitleFilterStart >= 0)
                         {
-                            item.attributedSubtitle.SetAttributes(highlightAttributesForSubtitle(), new NSRange(subtitleFilterStart, Text.Length));
+                            item.AttributedSubtitle.SetAttributes(HighlightAttributesForSubtitle(), new NSRange(subtitleFilterStart, Text.Length));
                         }
 
-                        filteredResults.Add(item);
+                        _filteredResults.Add(item);
                     }
                 }
                 else
                 {
                     var textToFilter = Text.ToLower();
 
-                    if (inlineMode && !string.IsNullOrEmpty(startFilteringAfter))
+                    if (InlineMode && !string.IsNullOrEmpty(StartFilteringAfter))
                     {
-                        var suffixToFilter = textToFilter.Split(startFilteringAfter).LastOrDefault();
+                        var suffixToFilter = textToFilter.Split(StartFilteringAfter).LastOrDefault();
                         if (suffixToFilter != null
-                            && (suffixToFilter != "" || startSuggestingInmediately == true)
+                            && (suffixToFilter != "" || StartSuggestingInmediately == true)
                             && (textToFilter != suffixToFilter))
                         {
                             textToFilter = suffixToFilter;
                         }
                         else
                         {
-                            placeholderLabel.Text = "";
+                            _placeholderLabel.Text = "";
                             return;
                         }
                     }
 
-                    if (item.title.ToLower().IndexOf(textToFilter, comparisonOptions) == 0)
+                    if (item.Title.ToLower().IndexOf(textToFilter, ComparisonOptions) == 0)
                     {
                         //var indexFrom = textToFilter.index(textToFilter.startIndex, offsetBy: textToFilter.count)
-                        var itemSuffix = item.title.Substring(textToFilter.Length);
+                        var itemSuffix = item.Title.Substring(textToFilter.Length);
 
-                        item.attributedTitle = new NSMutableAttributedString(itemSuffix);
-                        filteredResults.Add(item);
+                        item.AttributedTitle = new NSMutableAttributedString(itemSuffix);
+                        _filteredResults.Add(item);
                     }
                 }
             }
 
-            tableView?.ReloadData();
+            _tableView?.ReloadData();
 
-            if (inlineMode)
+            if (InlineMode)
             {
-                handleInlineFiltering();
+                HandleInlineFiltering();
             }
         }
 
         // Clean filtered results
-        private void clearResults()
+        private void ClearResults()
         {
-            filteredResults.Clear();
-            tableView?.RemoveFromSuperview();
+            _filteredResults.Clear();
+            _tableView?.RemoveFromSuperview();
         }
 
-        private UIStringAttributes highlightAttributesForSubtitle()
+        private UIStringAttributes HighlightAttributesForSubtitle()
         {
-            var attr = new UIStringAttributes(highlightAttributes.Dictionary);
+            var attr = new UIStringAttributes(HighlightAttributes.Dictionary);
 
-            var font = highlightAttributes?.Font;
+            var font = HighlightAttributes?.Font;
 
             if (font != null)
             {
-                attr.Font = UIFont.FromName(font.Name, font.PointSize * fontConversionRate);
+                attr.Font = UIFont.FromName(font.Name, font.PointSize * _fontConversionRate);
             }
 
             return attr;
         }
 
         // Handle inline behaviour
-        private void handleInlineFiltering()
+        private void HandleInlineFiltering()
         {
             if (Text != null)
             {
                 if (Text == "")
                 {
-                    if (placeholderLabel != null)
+                    if (_placeholderLabel != null)
                     {
-                        placeholderLabel.AttributedText = null;
+                        _placeholderLabel.AttributedText = null;
                     }
                 }
                 else
                 {
-                    var firstResult = filteredResults.FirstOrDefault();
+                    var firstResult = _filteredResults.FirstOrDefault();
                     if (firstResult != null)
                     {
-                        if (placeholderLabel != null)
+                        if (_placeholderLabel != null)
                         {
-                            placeholderLabel.AttributedText = firstResult.attributedTitle;
+                            _placeholderLabel.AttributedText = firstResult.AttributedTitle;
                         }
                     }
                     else
                     {
-                        if (placeholderLabel != null)
+                        if (_placeholderLabel != null)
                         {
-                            placeholderLabel.AttributedText = null;
+                            _placeholderLabel.AttributedText = null;
                         }
                     }
                 }
-            }
+            }   
         }
 
         // MARK: - Prepare for draw table result
 
-        private void prepareDrawTableResult()
+        private void PrepareDrawTableResult()
         {
             var frame = Superview?.ConvertRectToCoordinateSpace(Frame, UIApplication.SharedApplication.KeyWindow);
             if (frame == null)
@@ -680,31 +728,31 @@ namespace SearchTextField
                 return;
             }
 
-            if (keyboardFrame.HasValue)
+            if (_keyboardFrame.HasValue)
             {
                 var newFrame = frame.Value;
-                newFrame.Height += theme.cellHeight;
+                newFrame.Height += Theme.CellHeight;
 
-                if (keyboardFrame.Value.IntersectsWith(newFrame))
+                if (_keyboardFrame.Value.IntersectsWith(newFrame))
                 {
-                    direction = Direction.up;
+                    _direction = Direction.Up;
                 }
                 else
                 {
-                    direction = Direction.down;
+                    _direction = Direction.Down;
                 }
 
-                redrawSearchTableView();
+                RedrawSearchTableView();
             }
             else
             {
-                if (Center.Y + theme.cellHeight > UIApplication.SharedApplication.KeyWindow.Frame.Height)
+                if (Center.Y + Theme.CellHeight > UIApplication.SharedApplication.KeyWindow.Frame.Height)
                 {
-                    direction = Direction.up;
+                    _direction = Direction.Up;
                 }
                 else
                 {
-                    direction = Direction.down;
+                    _direction = Direction.Down;
                 }
             }
         }
@@ -713,42 +761,42 @@ namespace SearchTextField
 
         public nint RowsInSection(UITableView tableView, nint section)
         {
-            tableView.Hidden = !interactedWith || (filteredResults.Count == 0);
-            shadowView.Hidden = !interactedWith || (filteredResults.Count == 0);
+            tableView.Hidden = !InteractedWith || (_filteredResults.Count == 0);
+            _shadowView.Hidden = !InteractedWith || (_filteredResults.Count == 0);
 
-            if (maxNumberOfResults > 0)
+            if (MaxNumberOfResults > 0)
             {
-                return (nint)Math.Min(filteredResults.Count, maxNumberOfResults);
+                return (nint)Math.Min(_filteredResults.Count, MaxNumberOfResults);
             }
             else
             {
-                return filteredResults.Count;
+                return _filteredResults.Count;
             }
         }
 
         public UITableViewCell GetCell(UITableView tableView, NSIndexPath indexPath)
         {
-            var cell = tableView.DequeueReusableCell(MGSearchTextField.cellIdentifier);
+            var cell = tableView.DequeueReusableCell(MGSearchTextField.CellIdentifier);
 
             if (cell == null)
             {
-                cell = new UITableViewCell(style: UITableViewCellStyle.Subtitle, reuseIdentifier: MGSearchTextField.cellIdentifier);
+                cell = new UITableViewCell(style: UITableViewCellStyle.Subtitle, reuseIdentifier: MGSearchTextField.CellIdentifier);
             }
 
             cell.BackgroundColor = UIColor.Clear;
             cell.LayoutMargins = UIEdgeInsets.Zero;
             cell.PreservesSuperviewLayoutMargins = false;
-            cell.TextLabel.Font = theme.font;
-            cell.DetailTextLabel.Font = UIFont.FromName(name: theme.font.Name, size: theme.font.PointSize * fontConversionRate);
-            cell.TextLabel.TextColor = theme.fontColor;
-            cell.DetailTextLabel.TextColor = theme.subtitleFontColor;
+            cell.TextLabel.Font = Theme.Font;
+            cell.DetailTextLabel.Font = UIFont.FromName(name: Theme.Font.Name, size: Theme.Font.PointSize * _fontConversionRate);
+            cell.TextLabel.TextColor = Theme.FontColor;
+            cell.DetailTextLabel.TextColor = Theme.SubtitleFontColor;
 
-            cell.TextLabel.Text = filteredResults[(indexPath as NSIndexPath).Row].title;
-            cell.DetailTextLabel.Text = filteredResults[(indexPath as NSIndexPath).Row].subtitle;
-            cell.TextLabel.AttributedText = filteredResults[(indexPath as NSIndexPath).Row].attributedTitle;
-            cell.DetailTextLabel.AttributedText = filteredResults[(indexPath as NSIndexPath).Row].attributedSubtitle;
+            cell.TextLabel.Text = _filteredResults[(indexPath as NSIndexPath).Row].Title;
+            cell.DetailTextLabel.Text = _filteredResults[(indexPath as NSIndexPath).Row].Subtitle;
+            cell.TextLabel.AttributedText = _filteredResults[(indexPath as NSIndexPath).Row].AttributedTitle;
+            cell.DetailTextLabel.AttributedText = _filteredResults[(indexPath as NSIndexPath).Row].AttributedSubtitle;
 
-            cell.ImageView.Image = filteredResults[(indexPath as NSIndexPath).Row].image;
+            cell.ImageView.Image = _filteredResults[(indexPath as NSIndexPath).Row].Image;
 
             cell.SelectionStyle = UITableViewCellSelectionStyle.None;
 
@@ -758,23 +806,23 @@ namespace SearchTextField
         [Export("tableView:heightForRowAtIndexPath:")]
         public nfloat GetHeightForRow(UITableView tableView, NSIndexPath indexPath)
         {
-            return theme.cellHeight;
+            return Theme.CellHeight;
         }
 
         [Export("tableView:didSelectRowAtIndexPath:")]
         public void RowSelected(UITableView tableView, NSIndexPath indexPath)
         {
-            if (itemSelectionHandler == null)
+            if (ItemSelectionHandler == null)
             {
-                Text = filteredResults[(indexPath as NSIndexPath).Row].title;
+                Text = _filteredResults[(indexPath as NSIndexPath).Row].Title;
             }
             else
             {
                 var index = indexPath.Row;
-                itemSelectionHandler(filteredResults, index);
+                ItemSelectionHandler(_filteredResults, index);
             }
 
-            clearResults();
+            ClearResults();
         }
 
     }

@@ -1,5 +1,4 @@
 using System;
-
 using UIKit;
 
 namespace SearchTextField.Example
@@ -16,7 +15,7 @@ namespace SearchTextField.Example
 
             var countries = CountryList.Names;
 
-            txtSearchField.filterStrings(countries);
+            txtSearchField.FilterStrings(countries);
         }
 
     }

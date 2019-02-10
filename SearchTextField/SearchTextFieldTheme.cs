@@ -32,7 +32,7 @@ namespace SearchTextField
             PlaceholderColor = UIColor.LightGray;
         }
 
-        public static SearchTextFieldTheme lightTheme()
+        public static SearchTextFieldTheme LightTheme()
         {
             return new SearchTextFieldTheme(
                 cellHeight: 30,
@@ -43,7 +43,7 @@ namespace SearchTextField
                 fontColor: UIColor.Black);
         }
 
-        public static SearchTextFieldTheme darkTheme()
+        public static SearchTextFieldTheme DarkTheme()
         {
             return new SearchTextFieldTheme(
                 cellHeight: 30,
