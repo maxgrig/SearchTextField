@@ -520,11 +520,19 @@ namespace SearchTextField
         {
             var frameEnd = e.FrameEnd;
 
-            //Task.Delay(100).ContinueWith(t => InvokeOnMainThread(() =>
-            //{
+            if (KeyboardIsShowing)
+            {
+                Task.Delay(100).ContinueWith(t => InvokeOnMainThread(() =>
+                {
+                    _keyboardFrame = frameEnd;
+                    PrepareDrawTableResult();
+                }));
+            }
+            else 
+            {
                 _keyboardFrame = frameEnd;
                 PrepareDrawTableResult();
-            //}));
+            }
         }
 
         public void TypingDidStop()
