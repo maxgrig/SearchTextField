@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -14,7 +14,13 @@ namespace SearchTextField
     [Register("MGSearchTextField"), DesignTimeVisible(true)]
     public class MGSearchTextField : UITextField, IUITableViewDelegate, IUITableViewDataSource
     {
-        public MGSearchTextField(IntPtr handle) : base(handle) { }
+        public MGSearchTextField(IntPtr handle) : base(handle) 
+        { 
+        }
+
+        public MGSearchTextField(CGRect frame) : base(frame)
+        {
+        }
 
         /// <summary>
         /// Maximum number of results to be shown in the suggestions list

@@ -36,7 +36,7 @@ namespace SearchTextField
         {
             return new SearchTextFieldTheme(
                 cellHeight: 30,
-                bgColor: UIColor.FromRGBA(1, 1, 1, 0.6f),
+                bgColor: UIColor.FromRGBA(1, 1, 1, 0.9f),
                 borderColor: UIColor.FromRGBA(red: 0.9f, green: 0.9f, blue: 0.9f, alpha: 1.0f),
                 separatorColor: UIColor.Clear,
                 font: UIFont.SystemFontOfSize(14),
