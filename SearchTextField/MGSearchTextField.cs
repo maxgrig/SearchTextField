@@ -115,6 +115,8 @@ namespace SearchTextField
         /// </summary>
         public void FilterStrings(List<string> strings)
         {
+            strings = strings ?? new List<string>();
+
             var items = new List<SearchTextFieldItem>();
 
             foreach (var value in strings)
@@ -253,6 +255,10 @@ namespace SearchTextField
 
         //private readonly string currentInlineItem = "";
 
+        private NSObject _notificationKeyboardWillShow;
+        private NSObject _notificationKeyboardWillHide;
+        private NSObject _notificationKeyboardDidChangeFrame;
+
         public override void WillMoveToWindow(UIWindow window)
         {
             base.WillMoveToWindow(window);
@@ -261,16 +267,41 @@ namespace SearchTextField
 
         public override void WillMoveToSuperview(UIView newsuper)
         {
+            if (newsuper == null)
+            {
+                UnsubscribeFromEvents();
+            }
+
             base.WillMoveToSuperview(newsuper);
 
-            EditingChanged += (sender, e) => TextFieldDidChange();
-            EditingDidBegin += (sender, e) => TextFieldDidBeginEditing();
-            EditingDidEnd += (sender, e) => TextFieldDidEndEditing();
-            EditingDidEndOnExit += (sender, e) => TextFieldDidEndEditingOnExit();
+            if (newsuper != null)
+            {
+                SubscribeToEvents();
+            }
+        }
 
-            UIKeyboard.Notifications.ObserveWillShow(KeyboardWillShow);
-            UIKeyboard.Notifications.ObserveWillHide(KeyboardWillHide);
-            UIKeyboard.Notifications.ObserveDidChangeFrame(KeyboardDidChangeFrame);
+        private void SubscribeToEvents()
+        {
+            EditingChanged += TextFieldDidChange;
+            EditingDidBegin += TextFieldDidBeginEditing;
+            EditingDidEnd += TextFieldDidEndEditing;
+            EditingDidEndOnExit += TextFieldDidEndEditingOnExit;
+
+            _notificationKeyboardWillShow = UIKeyboard.Notifications.ObserveWillShow(KeyboardWillShow);
+            _notificationKeyboardWillHide = UIKeyboard.Notifications.ObserveWillHide(KeyboardWillHide);
+            _notificationKeyboardDidChangeFrame = UIKeyboard.Notifications.ObserveDidChangeFrame(KeyboardDidChangeFrame);
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            EditingChanged -= TextFieldDidChange;
+            EditingDidBegin -= TextFieldDidBeginEditing;
+            EditingDidEnd -= TextFieldDidEndEditing;
+            EditingDidEndOnExit -= TextFieldDidEndEditingOnExit;
+
+            _notificationKeyboardWillShow?.Dispose();
+            _notificationKeyboardWillHide?.Dispose();
+            _notificationKeyboardDidChangeFrame?.Dispose();
         }
 
         public override void LayoutSubviews()
@@ -489,11 +520,11 @@ namespace SearchTextField
         {
             var frameEnd = e.FrameEnd;
 
-            Task.Delay(100).ContinueWith(t => InvokeOnMainThread(() =>
-            {
+            //Task.Delay(100).ContinueWith(t => InvokeOnMainThread(() =>
+            //{
                 _keyboardFrame = frameEnd;
                 PrepareDrawTableResult();
-            }));
+            //}));
         }
 
         public void TypingDidStop()
@@ -502,7 +533,12 @@ namespace SearchTextField
         }
 
         // Handle text field changes
-        public void TextFieldDidChange()
+        private void TextFieldDidChange(object sender, EventArgs e)
+        {
+            TextFieldDidChange();
+        }
+
+        private void TextFieldDidChange()
         {
             if (!InlineMode && _tableView == null)
             {
@@ -537,7 +573,7 @@ namespace SearchTextField
             BuildPlaceholderLabel();
         }
 
-        public void TextFieldDidBeginEditing()
+        private void TextFieldDidBeginEditing(object sender, EventArgs e)
         {
             if ((StartVisible || StartVisibleWithoutInteraction) && string.IsNullOrWhiteSpace(Text))
             {
@@ -550,7 +586,7 @@ namespace SearchTextField
             }
         }
 
-        public void TextFieldDidEndEditing()
+        private void TextFieldDidEndEditing(object sender, EventArgs e)
         {
             ClearResults();
             _tableView?.ReloadData();
@@ -560,7 +596,7 @@ namespace SearchTextField
             }
         }
 
-        public void TextFieldDidEndEditingOnExit()
+        private void TextFieldDidEndEditingOnExit(object sender, EventArgs e)
         {
             var firstElement = _filteredResults.FirstOrDefault();
             if (firstElement != null)
