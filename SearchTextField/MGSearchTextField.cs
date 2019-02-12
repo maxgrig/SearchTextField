@@ -14,13 +14,21 @@ namespace SearchTextField
     [Register("MGSearchTextField"), DesignTimeVisible(true)]
     public class MGSearchTextField : UITextField, IUITableViewDelegate, IUITableViewDataSource
     {
-        public MGSearchTextField(IntPtr handle) : base(handle) 
-        { 
+        public MGSearchTextField(IntPtr handle) : base(handle)
+        {
         }
 
         public MGSearchTextField(CGRect frame) : base(frame)
         {
         }
+
+        /// <summary>
+        /// Enable Autocompletion for parts of string, divided by <c>MultiDelimeter</c>
+        /// </summary>
+        /// <value><c>true</c> if multi auto complete; otherwise, <c>false</c>.</value>
+        public bool MultiAutoComplete { get; set; } = false;
+
+        public string MultiDelimeter { get; set; } = ",";
 
         /// <summary>
         /// Maximum number of results to be shown in the suggestions list
@@ -528,7 +536,7 @@ namespace SearchTextField
                     PrepareDrawTableResult();
                 }));
             }
-            else 
+            else
             {
                 _keyboardFrame = frameEnd;
                 PrepareDrawTableResult();
@@ -538,6 +546,36 @@ namespace SearchTextField
         public void TypingDidStop()
         {
             this.UserStoppedTypingHandler?.Invoke();
+        }
+
+        private string TextToComplete
+        {
+            get
+            {
+                if (InlineMode || !MultiAutoComplete)
+                {
+                    return Text;
+                }
+
+                var lastText = Text.Split(MultiDelimeter)?.LastOrDefault()?.TrimStart(' ');
+                return lastText ?? "";
+            }
+            set
+            {
+                if (InlineMode || !MultiAutoComplete)
+                {
+                    Text = value;
+                }
+
+                var lastText = TextToComplete;
+
+                var position = Text.LastIndexOf(lastText, StringComparison.InvariantCulture);
+                if (position >= 0)
+                {
+                    var newFullText = Text.Substring(0, position) + value;
+                    Text = newFullText;
+                }
+            }
         }
 
         // Handle text field changes
@@ -559,7 +597,7 @@ namespace SearchTextField
             _timer?.Invalidate();
             _timer = NSTimer.CreateScheduledTimer(interval: TypingStoppedDelay, repeats: false, block: t => TypingDidStop());
 
-            if (string.IsNullOrWhiteSpace(Text))
+            if (string.IsNullOrWhiteSpace(TextToComplete))
             {
                 ClearResults();
                 _tableView?.ReloadData();
@@ -583,7 +621,7 @@ namespace SearchTextField
 
         private void TextFieldDidBeginEditing(object sender, EventArgs e)
         {
-            if ((StartVisible || StartVisibleWithoutInteraction) && string.IsNullOrWhiteSpace(Text))
+            if ((StartVisible || StartVisibleWithoutInteraction) && string.IsNullOrWhiteSpace(TextToComplete))
             {
                 ClearResults();
                 Filter(forceShowAll: true);
@@ -617,12 +655,12 @@ namespace SearchTextField
                 {
                     if (InlineMode && string.IsNullOrEmpty(StartFilteringAfter))
                     {
-                        var stringElements = this.Text?.Split(StartFilteringAfter);
-                        Text = stringElements.FirstOrDefault() + StartFilteringAfter + firstElement.Title;
+                        var stringElements = this.TextToComplete?.Split(StartFilteringAfter);
+                        TextToComplete = stringElements.FirstOrDefault() + StartFilteringAfter + firstElement.Title;
                     }
                     else
                     {
-                        Text = firstElement.Title;
+                        TextToComplete = firstElement.Title;
                     }
                 }
             }
@@ -645,7 +683,9 @@ namespace SearchTextField
         {
             ClearResults();
 
-            if (Text.Length < MinCharactersNumberToStartFiltering)
+            var textToComplete = TextToComplete;
+
+            if (textToComplete.Length < MinCharactersNumberToStartFiltering)
             {
                 return;
             }
@@ -657,19 +697,19 @@ namespace SearchTextField
                 if (!InlineMode)
                 {
                     // Find text in title and subtitle
-                    var titleFilterStart = item.Title.IndexOf(Text, ComparisonOptions);
-                    var subtitleFilterStart = !string.IsNullOrEmpty(item?.Subtitle) ? item.Subtitle.IndexOf(Text, ComparisonOptions) : -1;
+                    var titleFilterStart = item.Title.IndexOf(textToComplete, ComparisonOptions);
+                    var subtitleFilterStart = !string.IsNullOrEmpty(item?.Subtitle) ? item.Subtitle.IndexOf(textToComplete, ComparisonOptions) : -1;
 
                     if (titleFilterStart >= 0 || subtitleFilterStart >= 0 || forceShowAll)
                     {
                         item.AttributedTitle = new NSMutableAttributedString(item.Title);
                         item.AttributedSubtitle = new NSMutableAttributedString(!string.IsNullOrEmpty(item.Subtitle) ? item.Subtitle : "");
 
-                        item.AttributedTitle.SetAttributes(HighlightAttributes, new NSRange(titleFilterStart, Text.Length));
+                        item.AttributedTitle.SetAttributes(HighlightAttributes, new NSRange(titleFilterStart, textToComplete.Length));
 
                         if (subtitleFilterStart >= 0)
                         {
-                            item.AttributedSubtitle.SetAttributes(HighlightAttributesForSubtitle(), new NSRange(subtitleFilterStart, Text.Length));
+                            item.AttributedSubtitle.SetAttributes(HighlightAttributesForSubtitle(), new NSRange(subtitleFilterStart, textToComplete.Length));
                         }
 
                         _filteredResults.Add(item);
@@ -677,7 +717,7 @@ namespace SearchTextField
                 }
                 else
                 {
-                    var textToFilter = Text.ToLower();
+                    var textToFilter = textToComplete.ToLower();
 
                     if (InlineMode && !string.IsNullOrEmpty(StartFilteringAfter))
                     {
@@ -738,9 +778,11 @@ namespace SearchTextField
         // Handle inline behaviour
         private void HandleInlineFiltering()
         {
-            if (Text != null)
+            var textToComplete = TextToComplete;
+
+            if (textToComplete != null)
             {
-                if (Text == "")
+                if (textToComplete == "")
                 {
                     if (_placeholderLabel != null)
                     {
@@ -765,7 +807,7 @@ namespace SearchTextField
                         }
                     }
                 }
-            }   
+            }
         }
 
         // MARK: - Prepare for draw table result
@@ -864,7 +906,7 @@ namespace SearchTextField
         {
             if (ItemSelectionHandler == null)
             {
-                Text = _filteredResults[(indexPath as NSIndexPath).Row].Title;
+                TextToComplete = _filteredResults[(indexPath as NSIndexPath).Row].Title;
             }
             else
             {
