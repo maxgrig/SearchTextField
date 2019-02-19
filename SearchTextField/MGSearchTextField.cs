@@ -564,7 +564,8 @@ namespace SearchTextField
             {
                 if (InlineMode || !MultiAutoComplete)
                 {
-                    Text = value;
+                    SetTextAndNotify(value);
+                    return;
                 }
 
                 var lastText = TextToComplete;
@@ -573,9 +574,15 @@ namespace SearchTextField
                 if (position >= 0)
                 {
                     var newFullText = Text.Substring(0, position) + value;
-                    Text = newFullText;
+                    SetTextAndNotify(newFullText);
                 }
             }
+        }
+
+        private void SetTextAndNotify(string text)
+        {
+            Text = text;
+            SendActionForControlEvents(UIControlEvent.EditingChanged);
         }
 
         // Handle text field changes
