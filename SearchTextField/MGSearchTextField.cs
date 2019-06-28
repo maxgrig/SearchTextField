@@ -14,6 +14,10 @@ namespace SearchTextField
     [Register("MGSearchTextField"), DesignTimeVisible(true)]
     public class MGSearchTextField : UITextField, IUITableViewDelegate, IUITableViewDataSource
     {
+        public MGSearchTextField()
+        {
+        }
+
         public MGSearchTextField(IntPtr handle) : base(handle)
         {
         }
