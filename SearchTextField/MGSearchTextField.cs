@@ -419,7 +419,7 @@ namespace SearchTextField
 
         private void RedrawSearchTableView()
         {
-            if (InlineMode)
+            if (InlineMode && !KeyboardIsShowing)
             {
                 _tableView.Hidden = true;
                 return;
@@ -489,6 +489,8 @@ namespace SearchTextField
                         this._shadowView.Frame = new CGRect(x: frame.X + 3, y: (frame.Y + 3), width: frame.Width - 6, height: 1);
                     });
                 }
+                
+                _tableView.Hidden = false;
 
                 Superview?.BringSubviewToFront(_tableView);
                 Superview?.BringSubviewToFront(_shadowView);
